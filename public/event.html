@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Event</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      font-family: Arial, sans-serif;
+      color: #000;
+      background: #FFF8E7;
+    }
+
+    body {
+      width: min(100% - 32px, 1200px);
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    h1,
+    h2 {
+      font-family: "Arial Black", Arial, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.05;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      font-size: 1.6rem;
+    }
+
+    .back-link,
+    button {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      color: #000;
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 6px 6px 0 #000;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .back-link {
+      margin-bottom: 28px;
+      background: #fff;
+    }
+
+    .back-link:hover,
+    button:hover {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .back-link:active,
+    button:active {
+      transform: translate(4px, 4px);
+      box-shadow: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 24px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 6px 6px 0 #000;
+    }
+
+    #detail p {
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .event-description {
+      white-space: pre-wrap;
+    }
+
+    #form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 12px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+      font: inherit;
+    }
+
+    input:focus {
+      background: #7AE7C7;
+      outline: 3px solid #000;
+      outline-offset: 2px;
+    }
+
+    button {
+      width: 100%;
+      min-height: 52px;
+      background: #FFD60A;
+      cursor: pointer;
+    }
+
+    @media (min-width: 768px) {
+      .layout {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        width: min(100% - 24px, 1200px);
+        padding-top: 24px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back-link" href="/">← Kembali ke daftar event</a>
+
+    <div class="layout">
+      <section class="card" id="detail" aria-live="polite">
+        <h1>Detail Event</h1>
+        <p>Memuat detail event...</p>
+      </section>
+
+      <section class="card">
+        <h2>Form Pendaftaran</h2>
+        <form id="form">
+          <div class="field">
+            <label for="nama">Nama</label>
+            <input id="nama" name="nama" type="text" required>
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required>
+          </div>
+
+          <div class="field">
+            <label for="telepon">Telepon</label>
+            <input id="telepon" name="telepon" type="tel" required>
+          </div>
+
+          <button type="submit">Daftar</button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get("id");
+    const detail = document.getElementById("detail");
+    const form = document.getElementById("form");
+
+    async function muatDetailEvent() {
+      if (!eventId) {
+        detail.innerHTML = "<h1>Detail Event</h1><p>ID event tidak ditemukan.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/events/${encodeURIComponent(eventId)}`);
+        if (!response.ok) {
+          throw new Error(`Gagal memuat event: status ${response.status}`);
+        }
+
+        const event = await response.json();
+        detail.replaceChildren();
+
+        const judul = document.createElement("h1");
+        judul.textContent = event.nama;
+
+        const tanggal = document.createElement("p");
+        tanggal.textContent = new Date(event.tanggal).toLocaleString("id-ID");
+
+        const lokasi = document.createElement("p");
+        lokasi.textContent = `Lokasi: ${event.lokasi}`;
+
+        const deskripsi = document.createElement("p");
+        deskripsi.className = "event-description";
+        deskripsi.textContent = event.deskripsi || "Tidak ada deskripsi event.";
+
+        const harga = document.createElement("p");
+        harga.textContent = `Harga: ${event.harga}`;
+
+        detail.append(judul, tanggal, lokasi, deskripsi, harga);
+      } catch (error) {
+        console.error(error);
+        detail.replaceChildren();
+        const judul = document.createElement("h1");
+        judul.textContent = "Detail Event";
+        const pesan = document.createElement("p");
+        pesan.textContent = "Detail event gagal dimuat.";
+        detail.append(judul, pesan);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const body = {
+        event_id: eventId,
+        nama: form.elements.nama.value,
+        email: form.elements.email.value,
+        telepon: form.elements.telepon.value,
+      };
+
+      try {
+        const response = await fetch("/api/registrations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+          alert("Pendaftaran gagal. Status: " + response.status);
+          return;
+        }
+
+        alert("Pendaftaran berhasil!");
+        form.reset();
+      } catch (error) {
+        console.error(error);
+        alert("Pendaftaran gagal. Periksa koneksi lalu coba lagi.");
+      }
+    });
+
+    muatDetailEvent();
+  </script>
+</body>
+</html>

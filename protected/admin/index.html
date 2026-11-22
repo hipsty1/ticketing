@@ -2,33 +2,199 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Event</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      font-family: Arial, sans-serif;
+      color: #000;
+      background: #FFF8E7;
+    }
+
+    body {
+      width: min(100% - 32px, 1200px);
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    h1,
+    h2 {
+      font-family: "Arial Black", Arial, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      line-height: 1;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      font-size: 1.5rem;
+    }
+
+    .card {
+      min-width: 0;
+      margin-bottom: 28px;
+      padding: 24px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 6px 6px 0 #000;
+    }
+
+    #form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    input,
+    button {
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 12px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      color: #000;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: 3px solid #FFD60A;
+      outline-offset: 2px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 800;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    button:hover {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0 #000;
+    }
+
+    button:active {
+      transform: translate(4px, 4px);
+      box-shadow: none;
+    }
+
+    .save-button {
+      background: #FFD60A;
+    }
+
+    .cancel-button {
+      background: #fff;
+    }
+
+    .edit-button {
+      background: #7AE7C7;
+    }
+
+    .delete-button {
+      background: #FF6B9D;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 3px solid #000;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border: 2px solid #000;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #FFD60A;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    td:last-child button + button {
+      margin-left: 8px;
+    }
+
+    @media (min-width: 768px) {
+      #form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #form button {
+        width: fit-content;
+        min-width: 130px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        width: min(100% - 24px, 1200px);
+        padding-top: 24px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
   <h1>Admin Event</h1>
 
-  <h2 id="judul">Tambah Event</h2>
-  <form id="form">
-    <input type="text" id="nama" placeholder="Nama event" required><br>
-    <input type="text" id="deskripsi" placeholder="Deskripsi"><br>
-    <input type="datetime-local" id="tanggal" required><br>
-    <input type="text" id="lokasi" placeholder="Lokasi" required><br>
-    <input type="number" id="kapasitas" placeholder="Kapasitas" min="1" required><br>
-    <input type="number" id="harga" placeholder="Harga" min="0" value="0"><br>
-    <button type="submit">Simpan</button>
-    <button type="button" onclick="resetForm()">Batal</button>
-  </form>
+  <section class="card">
+    <h2 id="judul">Tambah Event</h2>
+    <form id="form">
+      <input type="text" id="nama" placeholder="Nama event" required>
+      <input type="text" id="deskripsi" placeholder="Deskripsi">
+      <input type="datetime-local" id="tanggal" required>
+      <input type="text" id="lokasi" placeholder="Lokasi" required>
+      <input type="number" id="kapasitas" placeholder="Kapasitas" min="1" required>
+      <input type="number" id="harga" placeholder="Harga" min="0">
+      <button class="save-button" type="submit">Simpan</button>
+      <button class="cancel-button" type="button" onclick="resetForm()">Batal</button>
+    </form>
+  </section>
 
-  <h2>Daftar Event</h2>
-  <table border="1" cellpadding="6">
-    <thead>
-      <tr>
-        <th>ID</th><th>Nama</th><th>Tanggal</th>
-        <th>Lokasi</th><th>Kapasitas</th><th>Harga</th><th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody id="tabel"></tbody>
-  </table>
+  <section class="card">
+    <h2>Daftar Event</h2>
+    <div class="table-wrap">
+      <table border="1" cellpadding="6">
+        <thead>
+          <tr>
+            <th>ID</th><th>Nama</th><th>Tanggal</th>
+            <th>Lokasi</th><th>Kapasitas</th><th>Harga</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel"></tbody>
+      </table>
+    </div>
+  </section>
 
 <script>
   const API = "/api/events";
@@ -49,8 +215,8 @@
         <td>${e.kapasitas}</td>
         <td>${e.harga}</td>
         <td>
-          <button onclick="isiForm(${e.id})">Edit</button>
-          <button onclick="hapus(${e.id})">Hapus</button>
+          <button class="edit-button" onclick="isiForm(${e.id})">Edit</button>
+          <button class="delete-button" onclick="hapus(${e.id})">Hapus</button>
         </td>
       </tr>`).join("");
   }
