@@ -1,0 +1,25 @@
+CREATE TABLE IF NOT EXISTS events (
+  id SERIAL PRIMARY KEY,
+  nama VARCHAR(150) NOT NULL,
+  deskripsi TEXT,
+  tanggal TIMESTAMP NOT NULL,
+  lokasi VARCHAR(200) NOT NULL,
+  kapasitas INTEGER NOT NULL CHECK (kapasitas > 0),
+  harga INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS registrations (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  nama VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  telepon VARCHAR(30),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+  id SERIAL PRIMARY KEY,
+  registration_id INTEGER NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+  kode_tiket VARCHAR(64) UNIQUE NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'aktif'
+);
