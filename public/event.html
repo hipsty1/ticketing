@@ -62,6 +62,18 @@
       background: #fff;
     }
 
+    #header {
+      width: 100%;
+      min-height: clamp(200px, 34vw, 360px);
+      margin-bottom: 28px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background-color: #9B9B9B;
+      background-position: center;
+      background-size: cover;
+      box-shadow: 6px 6px 0 #000;
+    }
+
     .back-link:hover,
     button:hover {
       transform: translate(3px, 3px);
@@ -160,6 +172,7 @@
 <body>
   <main>
     <a class="back-link" href="/">← Kembali ke daftar event</a>
+    <div id="header" role="img" aria-label="Gambar event"></div>
 
     <div class="layout">
       <section class="card" id="detail" aria-live="polite">
@@ -195,6 +208,7 @@
     const params = new URLSearchParams(window.location.search);
     const eventId = params.get("id");
     const detail = document.getElementById("detail");
+    const header = document.getElementById("header");
     const form = document.getElementById("form");
 
     async function muatDetailEvent() {
@@ -210,6 +224,9 @@
         }
 
         const event = await response.json();
+        if (typeof event.image_url === "string" && /^\/uploads\/[A-Za-z0-9._-]+$/.test(event.image_url)) {
+          header.style.backgroundImage = `url("${event.image_url}")`;
+        }
         detail.replaceChildren();
 
         const judul = document.createElement("h1");
@@ -221,6 +238,9 @@
         const lokasi = document.createElement("p");
         lokasi.textContent = `Lokasi: ${event.lokasi}`;
 
+        const kategori = document.createElement("p");
+        kategori.textContent = `Kategori: ${event.kategori || "Tanpa kategori"}`;
+
         const deskripsi = document.createElement("p");
         deskripsi.className = "event-description";
         deskripsi.textContent = event.deskripsi || "Tidak ada deskripsi event.";
@@ -228,7 +248,7 @@
         const harga = document.createElement("p");
         harga.textContent = `Harga: ${event.harga}`;
 
-        detail.append(judul, tanggal, lokasi, deskripsi, harga);
+        detail.append(judul, kategori, tanggal, lokasi, deskripsi, harga);
       } catch (error) {
         console.error(error);
         detail.replaceChildren();

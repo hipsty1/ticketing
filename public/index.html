@@ -73,24 +73,37 @@
     }
 
     .event-card {
+      display: flex;
       min-width: 0;
-      padding: 22px;
+      min-height: 320px;
+      align-items: flex-end;
+      overflow: hidden;
       border: 3px solid #000;
       border-radius: 4px;
-      background: #fff;
+      background-color: #9B9B9B;
+      background-position: center;
+      background-size: cover;
       box-shadow: 6px 6px 0 #000;
     }
 
-    .event-card h2 {
+    .event-overlay {
+      width: 100%;
+      min-width: 0;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.76);
+      color: #fff;
+    }
+
+    .event-overlay h2 {
       overflow-wrap: anywhere;
-      margin: 0 0 18px;
+      margin: 0 0 8px;
       font-size: 1.4rem;
     }
 
-    .event-card p {
-      margin: 0 0 12px;
-      line-height: 1.5;
+    .event-overlay p {
+      margin: 6px 0;
       overflow-wrap: anywhere;
+      line-height: 1.4;
     }
 
     .event-link {
@@ -102,20 +115,13 @@
       background: #7AE7C7;
       box-shadow: 6px 6px 0 #000;
       font-weight: 800;
-      text-align: center;
       text-decoration: none;
-      cursor: pointer;
       transition: transform 120ms ease, box-shadow 120ms ease;
     }
 
     .event-link:hover {
       transform: translate(3px, 3px);
       box-shadow: 2px 2px 0 #000;
-    }
-
-    .event-link:active {
-      transform: translate(4px, 4px);
-      box-shadow: none;
     }
 
     .empty-message {
@@ -131,11 +137,11 @@
 
     @media (min-width: 768px) {
       .filters {
-        grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+        grid-template-columns: minmax(0, 2fr) minmax(200px, 1fr) minmax(200px, 1fr);
       }
 
       #daftar {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
       }
     }
 
@@ -146,7 +152,7 @@
       }
 
       .event-card {
-        padding: 18px;
+        min-height: 280px;
       }
     }
   </style>
@@ -156,7 +162,10 @@
     <h1>DAFTAR EVENT</h1>
 
     <div class="filters">
-      <input type="search" id="cari" placeholder="Cari nama atau lokasi" aria-label="Cari nama atau lokasi">
+      <input type="search" id="cari" placeholder="Cari nama atau lokasi" aria-label="Cari nama, lokasi, atau kategori">
+      <select id="kategori" aria-label="Filter kategori">
+        <option value="semua">Semua kategori</option>
+      </select>
       <select id="rentang" aria-label="Filter rentang waktu">
         <option value="semua">Semua</option>
         <option value="7">7 hari ke depan</option>
@@ -171,25 +180,38 @@
     let events = [];
     const daftar = document.getElementById("daftar");
     const inputCari = document.getElementById("cari");
+    const selectKategori = document.getElementById("kategori");
     const selectRentang = document.getElementById("rentang");
+
+    function urlGambar(value) {
+      return typeof value === "string" && /^\/uploads\/[A-Za-z0-9._-]+$/.test(value)
+        ? value
+        : "";
+    }
 
     function tampilkanEvent() {
       const kataKunci = inputCari.value.trim().toLocaleLowerCase("id-ID");
+      const kategoriDipilih = selectKategori.value;
       const rentang = selectRentang.value;
       const sekarang = new Date();
       const batasTanggal = rentang === "semua"
         ? null
         : new Date(sekarang.getTime() + Number(rentang) * 24 * 60 * 60 * 1000);
 
-      const eventCocok = events.filter((e) => {
-        const nama = String(e.nama ?? "").toLocaleLowerCase("id-ID");
-        const lokasi = String(e.lokasi ?? "").toLocaleLowerCase("id-ID");
-        const cocokKataKunci = nama.includes(kataKunci) || lokasi.includes(kataKunci);
+      const eventCocok = events.filter((event) => {
+        const nama = String(event.nama ?? "").toLocaleLowerCase("id-ID");
+        const lokasi = String(event.lokasi ?? "").toLocaleLowerCase("id-ID");
+        const kategori = String(event.kategori ?? "").toLocaleLowerCase("id-ID");
+        const cocokKataKunci = nama.includes(kataKunci)
+          || lokasi.includes(kataKunci)
+          || kategori.includes(kataKunci);
+        const cocokKategori = kategoriDipilih === "semua"
+          || String(event.category_id ?? "") === kategoriDipilih;
 
-        if (!cocokKataKunci) return false;
+        if (!cocokKataKunci || !cocokKategori) return false;
         if (batasTanggal === null) return true;
 
-        const tanggalEvent = new Date(e.tanggal);
+        const tanggalEvent = new Date(event.tanggal);
         return !Number.isNaN(tanggalEvent.getTime())
           && tanggalEvent >= sekarang
           && tanggalEvent <= batasTanggal;
@@ -205,34 +227,42 @@
         return;
       }
 
-      eventCocok.forEach((e) => {
+      eventCocok.forEach((event) => {
         const kartu = document.createElement("article");
         kartu.className = "event-card";
+        const imageUrl = urlGambar(event.image_url);
+        if (imageUrl) {
+          kartu.style.backgroundImage = `url("${imageUrl}")`;
+        }
+
+        const overlay = document.createElement("div");
+        overlay.className = "event-overlay";
 
         const nama = document.createElement("h2");
-        nama.textContent = e.nama;
+        nama.textContent = event.nama;
+
+        const kategori = document.createElement("p");
+        kategori.textContent = `Kategori: ${event.kategori || "Tanpa kategori"}`;
 
         const tanggal = document.createElement("p");
-        tanggal.textContent = new Date(e.tanggal).toLocaleString("id-ID");
+        tanggal.textContent = new Date(event.tanggal).toLocaleString("id-ID");
 
         const lokasi = document.createElement("p");
-        lokasi.textContent = `Lokasi: ${e.lokasi}`;
+        lokasi.textContent = `Lokasi: ${event.lokasi}`;
 
         const harga = document.createElement("p");
-        harga.textContent = `Harga: ${e.harga}`;
+        harga.textContent = `Harga: ${event.harga}`;
 
         const tautan = document.createElement("a");
         tautan.className = "event-link";
-        tautan.href = `/event.html?id=${encodeURIComponent(e.id)}`;
+        tautan.href = `/event.html?id=${encodeURIComponent(event.id)}`;
         tautan.textContent = "Pilih event ini";
 
-        kartu.append(nama, tanggal, lokasi, harga, tautan);
+        overlay.append(nama, kategori, tanggal, lokasi, harga, tautan);
+        kartu.appendChild(overlay);
         daftar.appendChild(kartu);
       });
     }
-
-    inputCari.addEventListener("input", tampilkanEvent);
-    selectRentang.addEventListener("change", tampilkanEvent);
 
     async function muatEvent() {
       try {
@@ -240,7 +270,6 @@
         if (!response.ok) {
           throw new Error(`Gagal memuat event: status ${response.status}`);
         }
-
         events = await response.json();
         tampilkanEvent();
       } catch (error) {
@@ -253,7 +282,31 @@
       }
     }
 
+    async function muatKategori() {
+      try {
+        const response = await fetch("/api/categories");
+        if (!response.ok) {
+          throw new Error(`Gagal memuat kategori: status ${response.status}`);
+        }
+        const categories = await response.json();
+        categories.forEach((category) => {
+          const option = document.createElement("option");
+          option.value = category.id;
+          option.textContent = category.nama;
+          selectKategori.appendChild(option);
+        });
+        tampilkanEvent();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    inputCari.addEventListener("input", tampilkanEvent);
+    selectKategori.addEventListener("change", tampilkanEvent);
+    selectRentang.addEventListener("change", tampilkanEvent);
+
     muatEvent();
+    muatKategori();
   </script>
 </body>
 </html>

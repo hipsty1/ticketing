@@ -55,7 +55,18 @@
       gap: 14px;
     }
 
+    .form-field {
+      display: grid;
+      min-width: 0;
+      gap: 8px;
+    }
+
+    .form-field label {
+      font-weight: 800;
+    }
+
     input,
+    select,
     button {
       min-width: 0;
       min-height: 48px;
@@ -66,14 +77,58 @@
       font: inherit;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       background: #fff;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: 3px solid #FFD60A;
       outline-offset: 2px;
+    }
+
+    #preview {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      border: 3px solid #000;
+      border-radius: 4px;
+    }
+
+    .category-entry {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .category-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .category-list li {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px;
+      border: 2px solid #000;
+      overflow-wrap: anywhere;
+    }
+
+    .category-list button {
+      flex: 0 0 auto;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
     }
 
     button {
@@ -176,9 +231,32 @@
       <input type="text" id="lokasi" placeholder="Lokasi" required>
       <input type="number" id="kapasitas" placeholder="Kapasitas" min="1" required>
       <input type="number" id="harga" placeholder="Harga" min="0">
+      <div class="form-field">
+        <label for="kategori">Kategori</label>
+        <select id="kategori">
+          <option value="">Tanpa kategori</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="gambarFile">Gambar event</label>
+        <input type="file" id="gambarFile" name="gambar" accept=".jpg,.jpeg,.png,.webp">
+      </div>
+      <div class="form-field">
+        <input type="hidden" id="gambar">
+        <img id="preview" alt="Preview gambar event" hidden>
+      </div>
       <button class="save-button" type="submit">Simpan</button>
       <button class="cancel-button" type="button" onclick="resetForm()">Batal</button>
     </form>
+  </section>
+
+  <section class="card">
+    <h2>Kelola Kategori</h2>
+    <div class="category-entry">
+      <input type="text" id="namaKategori" placeholder="Nama kategori">
+      <button class="save-button" type="button" onclick="tambahKategori()">Tambah</button>
+    </div>
+    <ul class="category-list" id="daftarKategori"></ul>
   </section>
 
   <section class="card">
@@ -202,6 +280,130 @@
   let editId = null;
 
   const form = document.getElementById("form");
+
+  async function muatKategori() {
+    try {
+      const res = await fetch("/api/categories");
+      if (!res.ok) {
+        throw new Error("Gagal memuat kategori, status: " + res.status);
+      }
+
+      const kategori = await res.json();
+      const select = document.getElementById("kategori");
+      const nilaiTerpilih = select.value;
+      const opsiAwal = document.createElement("option");
+      opsiAwal.value = "";
+      opsiAwal.textContent = "Tanpa kategori";
+      select.replaceChildren(opsiAwal);
+
+      const daftarKategori = document.getElementById("daftarKategori");
+      daftarKategori.replaceChildren();
+
+      kategori.forEach((item) => {
+        const opsi = document.createElement("option");
+        opsi.value = item.id;
+        opsi.textContent = item.nama;
+        select.appendChild(opsi);
+
+        const baris = document.createElement("li");
+        const nama = document.createElement("span");
+        nama.textContent = item.nama;
+        const tombolHapus = document.createElement("button");
+        tombolHapus.type = "button";
+        tombolHapus.className = "delete-button";
+        tombolHapus.textContent = "Hapus";
+        tombolHapus.addEventListener("click", () => hapusKategori(item.id));
+        baris.append(nama, tombolHapus);
+        daftarKategori.appendChild(baris);
+      });
+
+      if ([...select.options].some((opsi) => opsi.value === nilaiTerpilih)) {
+        select.value = nilaiTerpilih;
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+    }
+  }
+
+  async function tambahKategori() {
+    const input = document.getElementById("namaKategori");
+    const nama = input.value.trim();
+    if (!nama) {
+      alert("Nama kategori wajib diisi.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nama }),
+      });
+      const hasil = await res.json();
+      if (!res.ok) {
+        alert(hasil.error || "Gagal menambahkan kategori.");
+        return;
+      }
+      input.value = "";
+      await muatKategori();
+    } catch (error) {
+      console.error(error);
+      alert("Gagal menambahkan kategori.");
+    }
+  }
+
+  async function hapusKategori(id) {
+    if (!confirm("Yakin hapus kategori ini?")) return;
+
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      const hasil = await res.json();
+      if (!res.ok) {
+        alert(hasil.error || "Gagal menghapus kategori.");
+        return;
+      }
+      await muatKategori();
+    } catch (error) {
+      console.error(error);
+      alert("Gagal menghapus kategori.");
+    }
+  }
+
+  function setPreview(url) {
+    const preview = document.getElementById("preview");
+    document.getElementById("gambar").value = url || "";
+    preview.src = url || "";
+    preview.hidden = !url;
+  }
+
+  document.getElementById("gambarFile").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const tombolSimpan = form.querySelector('button[type="submit"]');
+    tombolSimpan.disabled = true;
+    const data = new FormData();
+    data.append("gambar", file);
+
+    try {
+      const res = await fetch("/api/uploads", {
+        method: "POST",
+        body: data,
+      });
+      const hasil = await res.json();
+      if (!res.ok) {
+        throw new Error(hasil.error || "Gagal mengunggah gambar.");
+      }
+      setPreview(hasil.url);
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+      event.target.value = "";
+    } finally {
+      tombolSimpan.disabled = false;
+    }
+  });
 
   async function muatEvent() {
     const res = await fetch(API);
@@ -238,12 +440,15 @@
     document.getElementById("lokasi").value = e.lokasi;
     document.getElementById("kapasitas").value = e.kapasitas;
     document.getElementById("harga").value = e.harga;
+    document.getElementById("kategori").value = e.category_id || "";
+    setPreview(e.image_url || "");
   }
 
   function resetForm() {
     form.reset();
     editId = null;
     document.getElementById("judul").textContent = "Tambah Event";
+    setPreview("");
   }
 
   form.addEventListener("submit", async (ev) => {
@@ -255,6 +460,8 @@
       lokasi: document.getElementById("lokasi").value,
       kapasitas: Number(document.getElementById("kapasitas").value),
       harga: Number(document.getElementById("harga").value),
+      category_id: document.getElementById("kategori").value || null,
+      image_url: document.getElementById("gambar").value || null,
     };
 
     const res = await fetch(editId ? `${API}/${editId}` : API, {
@@ -277,7 +484,12 @@
     muatEvent();
   }
 
-  muatEvent();
+  async function mulai() {
+    await muatKategori();
+    await muatEvent();
+  }
+
+  mulai();
 </script>
 </body>
 </html>
