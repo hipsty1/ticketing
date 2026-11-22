@@ -276,13 +276,13 @@
           body: JSON.stringify(body),
         });
 
+        const hasil = await response.json().catch(() => ({}));
         if (!response.ok) {
-          alert("Pendaftaran gagal. Status: " + response.status);
+          alert(hasil.error || hasil.message || "Pendaftaran gagal. Status: " + response.status);
           return;
         }
 
-        alert("Pendaftaran berhasil!");
-        form.reset();
+        window.location.href = `/sukses.html?kode=${encodeURIComponent(hasil.kode_tiket)}`;
       } catch (error) {
         console.error(error);
         alert("Pendaftaran gagal. Periksa koneksi lalu coba lagi.");

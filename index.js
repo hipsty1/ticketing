@@ -6,6 +6,7 @@ const eventRoutes = require("./routes/events");
 const categoryRoutes = require("./routes/categories");
 const registrationRoutes = require("./routes/registrations");
 const uploadRoutes = require("./routes/uploads");
+const ticketRoutes = require("./routes/tickets");
 
 const app = express();
 app.use(express.json());
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api/categories", categoryRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 // Halaman admin: wajib login
 app.use("/admin", adminAuth, express.static(path.join(__dirname, "protected/admin")));

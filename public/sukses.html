@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiket Anda</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      font-family: Arial, sans-serif;
+      color: #000;
+      background: #FFF8E7;
+    }
+
+    body {
+      width: min(100% - 32px, 720px);
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+
+    .ticket {
+      padding: 28px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 6px 6px 0 #000;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-code {
+      overflow-wrap: anywhere;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    #qr {
+      display: block;
+      width: min(100%, 280px);
+      height: auto;
+      margin: 24px auto;
+      border: 3px solid #000;
+    }
+
+    .back-link {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border: 3px solid #000;
+      border-radius: 4px;
+      background: #FFD60A;
+      box-shadow: 6px 6px 0 #000;
+      color: #000;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        width: min(100% - 24px, 720px);
+        padding-top: 24px;
+      }
+
+      .ticket {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="ticket">
+    <h1 id="judul">Tiket Anda</h1>
+    <p id="pesan">Simpan kode dan QR tiket ini.</p>
+    <p class="ticket-code" id="kode"></p>
+    <img id="qr" alt="QR code tiket" hidden>
+    <a class="back-link" href="/">Kembali ke daftar event</a>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const kode = params.get("kode");
+    const judul = document.getElementById("judul");
+    const pesan = document.getElementById("pesan");
+    const kodeElement = document.getElementById("kode");
+    const qr = document.getElementById("qr");
+
+    if (!kode) {
+      judul.textContent = "Tiket tidak ditemukan";
+      pesan.textContent = "Kode tiket tidak tersedia.";
+    } else {
+      kodeElement.textContent = `Kode tiket: ${kode}`;
+      qr.src = `/api/tickets/${encodeURIComponent(kode)}/qr`;
+      qr.hidden = false;
+    }
+  </script>
+</body>
+</html>
