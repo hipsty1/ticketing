@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db");
 const router = express.Router();
+const adminAuth = require("../middleware/auth");
 
 // GET semua event
 router.get("/", async (req, res) => {
@@ -18,7 +19,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST event baru
-router.post("/", async (req, res) => {
+router.post("/", adminAuth, async (req, res) => {
   const { nama, deskripsi, tanggal, lokasi, kapasitas, harga } = req.body;
   if (!nama || !tanggal || !lokasi || !kapasitas) {
     return res.status(400).json({ error: "Data wajib belum lengkap" });
@@ -31,7 +32,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT ubah event
-router.put("/:id", async (req, res) => {
+router.put("/:id", adminAuth, async (req, res) => {
   const { nama, deskripsi, tanggal, lokasi, kapasitas, harga } = req.body;
   const result = await pool.query(
     "UPDATE events SET nama=$1, deskripsi=$2, tanggal=$3, lokasi=$4, kapasitas=$5, harga=$6 WHERE id=$7 RETURNING *",
@@ -44,7 +45,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE event
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuth, async (req, res) => {
   const result = await pool.query("DELETE FROM events WHERE id = $1 RETURNING id", [req.params.id]);
   if (result.rows.length === 0) {
     return res.status(404).json({ error: "Event tidak ditemukan" });

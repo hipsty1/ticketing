@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Event</title>
+</head>
+<body>
+  <h1>Admin Event</h1>
+
+  <h2 id="judul">Tambah Event</h2>
+  <form id="form">
+    <input type="text" id="nama" placeholder="Nama event" required><br>
+    <input type="text" id="deskripsi" placeholder="Deskripsi"><br>
+    <input type="datetime-local" id="tanggal" required><br>
+    <input type="text" id="lokasi" placeholder="Lokasi" required><br>
+    <input type="number" id="kapasitas" placeholder="Kapasitas" min="1" required><br>
+    <input type="number" id="harga" placeholder="Harga" min="0" value="0"><br>
+    <button type="submit">Simpan</button>
+    <button type="button" onclick="resetForm()">Batal</button>
+  </form>
+
+  <h2>Daftar Event</h2>
+  <table border="1" cellpadding="6">
+    <thead>
+      <tr>
+        <th>ID</th><th>Nama</th><th>Tanggal</th>
+        <th>Lokasi</th><th>Kapasitas</th><th>Harga</th><th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="tabel"></tbody>
+  </table>
+
+<script>
+  const API = "/api/events";
+  let daftar = [];
+  let editId = null;
+
+  const form = document.getElementById("form");
+
+  async function muatEvent() {
+    const res = await fetch(API);
+    daftar = await res.json();
+    document.getElementById("tabel").innerHTML = daftar.map(e => `
+      <tr>
+        <td>${e.id}</td>
+        <td>${e.nama}</td>
+        <td>${new Date(e.tanggal).toLocaleString("id-ID")}</td>
+        <td>${e.lokasi}</td>
+        <td>${e.kapasitas}</td>
+        <td>${e.harga}</td>
+        <td>
+          <button onclick="isiForm(${e.id})">Edit</button>
+          <button onclick="hapus(${e.id})">Hapus</button>
+        </td>
+      </tr>`).join("");
+  }
+
+  // Ubah tanggal dari database ke format yang dimengerti input datetime-local
+  function keLokal(tgl) {
+    const d = new Date(tgl);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+
+  function isiForm(id) {
+    const e = daftar.find(x => x.id === id);
+    editId = id;
+    document.getElementById("judul").textContent = "Edit Event #" + id;
+    document.getElementById("nama").value = e.nama;
+    document.getElementById("deskripsi").value = e.deskripsi || "";
+    document.getElementById("tanggal").value = keLokal(e.tanggal);
+    document.getElementById("lokasi").value = e.lokasi;
+    document.getElementById("kapasitas").value = e.kapasitas;
+    document.getElementById("harga").value = e.harga;
+  }
+
+  function resetForm() {
+    form.reset();
+    editId = null;
+    document.getElementById("judul").textContent = "Tambah Event";
+  }
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const body = {
+      nama: document.getElementById("nama").value,
+      deskripsi: document.getElementById("deskripsi").value,
+      tanggal: document.getElementById("tanggal").value,
+      lokasi: document.getElementById("lokasi").value,
+      kapasitas: Number(document.getElementById("kapasitas").value),
+      harga: Number(document.getElementById("harga").value),
+    };
+
+    const res = await fetch(editId ? `${API}/${editId}` : API, {
+      method: editId ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      alert("Gagal menyimpan, status: " + res.status);
+      return;
+    }
+    resetForm();
+    muatEvent();
+  });
+
+  async function hapus(id) {
+    if (!confirm("Yakin hapus event ini?")) return;
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    muatEvent();
+  }
+
+  muatEvent();
+</script>
+</body>
+</html>
